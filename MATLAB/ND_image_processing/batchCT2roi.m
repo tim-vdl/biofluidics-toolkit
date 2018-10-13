@@ -1,4 +1,4 @@
-function [ROI, bwROI, bwROI_filled, FV] = batchCT2roi_v2(CT_vol, labels, missing, varargin)
+function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volume, labels, missing, varargin)
 %% BATCHCT2ROI
 % Crops all objects in a volume according to labeling.
 %
@@ -38,13 +38,15 @@ function [ROI, bwROI, bwROI_filled, FV] = batchCT2roi_v2(CT_vol, labels, missing
 %                            each coordinate variable.
 %       SavePath:   Specifies where to save the outputs. By default, the
 %                   outputs are not saved. For every output type
-%                   (ROI, bwROI, bwROI_filled, FV) a seperate folder will 
+%                   {'ROI', 'BW', 'BW_filled', 'FV'} a seperate folder will 
 %                   be generated in the SavePath folder called
 %                   ROI, BW, BW_filled and FV, respectively.
 %       OutputToSave: Cell str that specifies which output variables to
 %                     save containing one or multiple elements of 
 %                     {'ROI', 'bwROI', 'bwROI_filled', 'FV'}. 
-%                     By default, only {'ROI'} are saved
+%                     By default, only {'ROI'} are saved. Output types can
+%                     not be saved if they are not included in the output
+%                     during the function call.
 %       MeshSaveFormat: Format in which the meshes are saved 
 %                       ('mat', 'stl' or 'both').
 %       CTvolPadSize:   Size of padding to each side of the volume (default = 5)
@@ -96,39 +98,40 @@ n_in_layer = n_per_layer - missing_per_layer;
 n_in_col = n_row - sum(missing,1);
 
 %% Pad 3D image: add 2 planes of zeroes in x, y, and z direction at beginning and end.
-CT_vol   = padarray(CT_vol,[pad_size pad_size pad_size]);
+volume   = padarray(volume,[pad_size pad_size pad_size]);
 
 %% Segment the objects
 fprintf('Binarizing the volume... \n');
-bwCT_vol = CT_vol > multithresh(CT_vol);
-bwCT_vol = imclose(bwCT_vol,ones(strel_size,strel_size,strel_size));
+bw_volume = volume > multithresh(volume);
+bw_volume = imclose(bw_volume,ones(strel_size,strel_size,strel_size));
 
 fprintf('Filling binary objects... \n');
-bwCT_vol_filled = imfill(bwCT_vol,'holes');
-for i=1:size(CT_vol,3)
-    bwCT_vol(:,:,i) = imfill(bwCT_vol(:,:,i),'holes');
+bw_volume_filled = imfill(bw_volume,'holes');
+for i=1:size(volume,3)
+    bw_volume(:,:,i) = imfill(bw_volume(:,:,i),'holes');
 end
 
 % Remove small objects
 fprintf('Removing small objects... \n');
-bwCT_vol_filled = bwareaopen(bwCT_vol_filled, min_object_vol);
-bwCT_vol = bwareaopen(bwCT_vol, min_object_vol);
+bw_volume_filled = bwareaopen(bw_volume_filled, min_object_vol);
+bw_volume = bwareaopen(bw_volume, min_object_vol);
 
 %% Get the bounding box around each object
 fprintf('Sorting objects according to numbering... \n');
 % Calculate region properties
-stats = regionprops3(bwCT_vol_filled, 'BoundingBox','Centroid');
+stats = regionprops3(bw_volume_filled, 'BoundingBox','Centroid');
 x = stats.Centroid(:,2);
 y = stats.Centroid(:,1);
 z = stats.Centroid(:,3);
 centroid_table = table(y,x,z,...
     'VariableNames',{'Y','X','Z'});
 T = [centroid_table, stats];
-
 % Sort according to Z to seperate layers
-T = sortrows(T,'Z'); 
-% Assign the bounding box according to position and the labeling convention
+T = sortrows(T,'Z');
+
+% Assign the bounding box and centroids according to position and the labeling convention
 bounding_boxes = cell(size(labels));
+centroids = bounding_boxes;
 for i = 1:n_layers
     if i == 1
         this_layer = T(1:n_in_layer(i),:);
@@ -149,6 +152,7 @@ for i = 1:n_layers
             if ~missing(r,c,i)
                 count = count+1;
                 bounding_boxes{r,c,i} = this_layer.BoundingBox(count,:);
+                centroids{r,c,i} = this_layer.Centroid(count,:);
             end
         end
     end
@@ -158,8 +162,8 @@ end
 %% Crop objects and calculate faces and vertices
 fprintf('Cropping ROIs ... \n')
 ROI = cell(size(labels));
-bwROI = ROI;
-bwROI_filled = ROI;
+BW = ROI;
+BW_filled = ROI;
 FV = ROI;
 
 for i = 1:numel(labels)
@@ -172,25 +176,25 @@ for i = 1:numel(labels)
         zMin = floor(bb(3)) - 1;
         zMax = ceil(zMin + bb(6)) + 1;
         fprintf('Cropping ROI %s ... \n', labels{i});
-        roi = CT_vol(yMin:yMax,...
+        roi = volume(yMin:yMax,...
             xMin:xMax,...
             zMin:zMax);
         ROI{i} = padarray(roi,[1 1 1]);
         
-        if nargout >= 2 % Other ouputs if requested
+        if nargout >= 4 % Other ouputs if requested
             fprintf('Cropping bwROI %s ... \n', labels{i});
-            bw_roi = bwCT_vol(yMin:yMax,...
+            bw_roi = bw_volume(yMin:yMax,...
                 xMin:xMax,...
                 zMin:zMax);
-            bwROI{i} = padarray(bw_roi,[1 1 1]);
-            if nargout >= 3
+            BW{i} = padarray(bw_roi,[1 1 1]);
+            if nargout >= 5
                 fprintf('Cropping bwROIfilled %s ... \n', labels{i});
-                bw_roi_filled = bwCT_vol_filled(yMin:yMax,...
+                bw_roi_filled = bw_volume_filled(yMin:yMax,...
                     xMin:xMax,...
                     zMin:zMax);
                 bw_roi_filled = padarray(bw_roi_filled,[1 1 1]);
-                bwROI_filled{i} = bw_roi_filled;
-                if nargout >= 4
+                BW_filled{i} = bw_roi_filled;
+                if nargout >= 6
                     fprintf('Generating Faces and Vertices of %s ... \n', labels{i});
                     fv = isosurface(bw_roi_filled, 0.5);
                     fv = reducepatch(fv, mesh_reduction_factor);
@@ -226,7 +230,7 @@ if ~isempty(save_path)
                 folder = labels{i};
                 fprintf('Saving slices of BW %s ... \n', folder);
                 mkdir(save_path, output_type, folder);
-                this_roi = bwROI{i};
+                this_roi = BW{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
                         fullfile(save_path,...
@@ -240,7 +244,7 @@ if ~isempty(save_path)
                 folder = labels{i};
                 fprintf('Saving slices of BW_filled %s ... \n', folder);
                 mkdir(save_path, output_type, folder);
-                this_roi = bwROI_filled{i};
+                this_roi = BW_filled{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
                         fullfile(save_path,...
