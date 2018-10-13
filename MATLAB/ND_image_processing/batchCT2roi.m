@@ -58,6 +58,10 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 % OUTPUTS:
 %   ROI:    Cropped objects in the original volume according the the
 %           structure defined by "labels".
+%   bounding_boxes: Bounding box of every ROI. See "help regionprops3" for
+%                   more details.
+%   centroids: Centroids box of every ROI. See "help regionprops3" for
+%              more details.
 %   bwROI:  Cropped binarized objects in the volume according the the
 %           structure defined by "labels".
 %   bwROI_filled:   Cropped binarized and filled objects in the volume 
