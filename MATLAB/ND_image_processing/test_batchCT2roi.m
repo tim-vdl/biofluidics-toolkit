@@ -21,8 +21,7 @@ missing = zeros(size(labels));
 missing(1,1,2) = 1;
 
 clc
-save_path = 'C:\Users\u0117721\Desktop\Conference_20162017_boxes\roi\box2';
-[ROI, ~, ~,FV] = batchCT2roi_v2(CT_vol_r, labels, missing);
+[ROI, ~, ~, ~,~,FV] = batchCT2roi(CT_vol_r, labels, missing);
 
 %%
 figure;imshow3Dfull(CT_vol_r)
