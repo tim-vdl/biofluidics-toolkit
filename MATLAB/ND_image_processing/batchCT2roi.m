@@ -54,7 +54,9 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 %                       binary volume to "clean up" the segmentation with
 %                       imclose() (default = 5). Play with this value if 
 %                       the default setting is not appropriate for the 
-%                       resolution. 
+%                       resolution.
+%       BinarizeThreshold:  Threshold that is used to binarize the volume.
+%                           By default, the multithresh(volume,1) is used.
 % OUTPUTS:
 %   ROI:    Cropped objects in the original volume according the the
 %           structure defined by "labels".
@@ -82,6 +84,7 @@ addParameter(p,'OutputToSave',{'ROI'},@iscellstr);
 addParameter(p,'MeshSaveFormat','stl',checkMeshSaveFormat);
 addParameter(p,'CTvolPadSize',5,is_one_number);
 addParameter(p,'StrelSize',5,is_one_number);
+addParameter(p,'BinarizeThreshold', multithresh(volume,1), is_one_number);
 parse(p,varargin{:});
 % parse(p,
 
@@ -93,6 +96,7 @@ mesh_reduction_factor = p.Results.MeshReductionFactor;
 mesh_dim_scales = p.Results.MeshDimensionScales;
 pad_size = p.Results.CTvolPadSize;
 strel_size = p.Results.StrelSize;
+binarize_threshold = p.Results.BinarizeThreshold;
 
 %% Infere info
 [n_row, n_col, n_layers] = size(labels);
@@ -106,7 +110,7 @@ volume   = padarray(volume,[pad_size pad_size pad_size]);
 
 %% Segment the objects
 fprintf('Binarizing the volume... \n');
-bw_volume = volume > multithresh(volume);
+bw_volume = volume > binarize_threshold;
 bw_volume = imclose(bw_volume,ones(strel_size,strel_size,strel_size));
 
 fprintf('Filling binary objects... \n');
@@ -190,13 +194,16 @@ for i = 1:numel(labels)
             bw_roi = bw_volume(yMin:yMax,...
                 xMin:xMax,...
                 zMin:zMax);
-            BW{i} = padarray(bw_roi,[1 1 1]);
+            bw_roi = padarray(bw_roi,[1 1 1]);
+            bw_roi = keepNobj(bw_roi,1);
+            BW{i} = bw_roi;
             if nargout >= 5
                 fprintf('Cropping bwROIfilled %s ... \n', labels{i});
                 bw_roi_filled = bw_volume_filled(yMin:yMax,...
                     xMin:xMax,...
                     zMin:zMax);
                 bw_roi_filled = padarray(bw_roi_filled,[1 1 1]);
+                bw_roi_filled = keepNobj(bw_roi_filled,1);
                 BW_filled{i} = bw_roi_filled;
                 if nargout >= 6
                     fprintf('Generating Faces and Vertices of %s ... \n', labels{i});
