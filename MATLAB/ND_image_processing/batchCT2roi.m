@@ -226,7 +226,7 @@ if ~isempty(save_path)
                 output_type = 'ROI';
                 folder = labels{i};
                 fprintf('Saving slices of ROI %s ... \n', folder);
-                mkdir(save_path, output_type, folder);
+                mkdir(fullfile(save_path, output_type, folder));
                 this_roi = ROI{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
@@ -240,7 +240,7 @@ if ~isempty(save_path)
                 output_type = 'BW';
                 folder = labels{i};
                 fprintf('Saving slices of BW %s ... \n', folder);
-                mkdir(save_path, output_type, folder);
+                mkdir(fullfile(save_path, output_type, folder));
                 this_roi = BW{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
@@ -254,7 +254,7 @@ if ~isempty(save_path)
                 output_type = 'BW_filled';
                 folder = labels{i};
                 fprintf('Saving slices of BW_filled %s ... \n', folder);
-                mkdir(save_path, output_type, folder);
+                mkdir(fullfile(save_path, output_type, folder));
                 this_roi = BW_filled{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
@@ -268,17 +268,17 @@ if ~isempty(save_path)
                 output_type = 'FV';
                 folder = labels{i};
                 fprintf('Saving mesh of FV %s ... \n', folder);
-                mkdir(save_path, output_type);
+                mkdir(fullfile(save_path, output_type));
                 this_roi = FV{i};
                 if strcmp(mesh_save_format,'mat')
                     file_name = strcat(folder,'.mat');
-                    save(fullfile(save_path, output_type, file_name), this_roi)
+                    save(fullfile(save_path, output_type, file_name), 'this_roi')
                 elseif strcmp(mesh_save_format,'stl')
                     file_name = strcat(folder,'.stl');
                     stlWrite(fullfile(save_path, output_type, file_name), this_roi)
                 elseif strcmp(mesh_save_format,'both')
                     file_name = strcat(folder,'.mat');
-                    save(fullfile(save_path, output_type, file_name), this_roi)
+                    save(fullfile(save_path, output_type, file_name), 'this_roi')
                     file_name = strcat(folder,'.stl');
                     stlWrite(fullfile(save_path, output_type, file_name), this_roi)
                 end
