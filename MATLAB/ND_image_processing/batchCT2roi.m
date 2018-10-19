@@ -86,7 +86,6 @@ addParameter(p,'CTvolPadSize',5,is_one_number);
 addParameter(p,'StrelSize',5,is_one_number);
 addParameter(p,'BinarizeThreshold', multithresh(volume,1), is_one_number);
 parse(p,varargin{:});
-% parse(p,
 
 output2save = p.Results.OutputToSave;
 min_object_vol = p.Results.MinimalObjectVolume;
@@ -209,7 +208,7 @@ for i = 1:numel(labels)
                     fprintf('Generating Faces and Vertices of %s ... \n', labels{i});
                     fv = isosurface(bw_roi_filled, 0.5);
                     fv = reducepatch(fv, mesh_reduction_factor);
-                    fv.vertices = fv.vertices .* mesh_dim_scales;
+                    fv.vertices = (fv.vertices - nanmean(fv.vertices,1)) .* mesh_dim_scales;
                     FV{i} = fv;
                 end
             end
