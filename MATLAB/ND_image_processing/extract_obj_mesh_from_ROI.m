@@ -25,7 +25,6 @@ for i = 1:numel(ROI)
         obj = keepNobj(obj,1);
         obj = imclose(obj,ones(5,5,5));
         obj = imfill(obj,'holes');
-        figure;imshow3Dfull(obj)
         fv = isosurface(obj, 0.5);
         fv = reducepatch(fv, mesh_reduction_factor);
         fv.vertices = (fv.vertices - nanmean(fv.vertices,1)) .* mesh_dim_scales;
