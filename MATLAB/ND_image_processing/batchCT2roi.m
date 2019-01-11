@@ -3,7 +3,7 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 % Crops all objects in a volume according to labeling.
 %
 % INPUTS:
-%   CT_vol: "CT_vol" is a volume (3D matrix) from which you want to isolate
+%   volume: "volume" is a volume (3D matrix) from which you want to isolate
 %           the objects, and order and label them according a certain grid. 
 %           The grid with the object labels is defined by the input argument
 %           "labels".
@@ -14,12 +14,12 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 %           of objects in each layer of the volume. Each element of
 %           "labels" contains a char that specifies the label of the object
 %           in that position of the grid. By convention, the corresponding 
-%           positions between "labels" and "CT_vol" are as they occure when
-%           the function imshow3D() is called on CT_vol. The label of
+%           positions between "labels" and "volume" are as they occure when
+%           the function imshow3D() is called on volume. The label of
 %           label{1,1,1} corresponds with the first object that can be found 
 %           in the upper left corner of the volume when scrolling through
-%           the slices from 1 to the end (CT_vol(:,:,1) to
-%           CT_vol(:,:,end)). labels{end,end,end} corresponds with the last 
+%           the slices from 1 to the end (volume(:,:,1) to
+%           volume(:,:,end)). labels{end,end,end} corresponds with the last 
 %           object that can be found in the bottom right corner of the 
 %           volume when scrolling through the slices from 1 to the end.
 %           label{end,1,end} corresponds with the last object that can be 
@@ -27,7 +27,7 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 %           through the slices from 1 to the end.
 %   missing: "missing" is a matrix of the same size as "labels" with zeros
 %            on the positions where there is an object expected and a 1 
-%            where the object is expected to be missing. In the ouputs,
+%            where the object is expected to be missing. The outputs,
 %            structured in the same way as "labels" and "missing", 
 %            will be empty at the positions where "missing" has a 1.
 %   Name-Value pairs:
@@ -56,7 +56,7 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 %                       the default setting is not appropriate for the 
 %                       resolution.
 %       BinarizeThreshold:  Threshold that is used to binarize the volume.
-%                           By default, the multithresh(volume,1) is used.
+%                           By default, the multithresh(volume, 1) is used.
 % OUTPUTS:
 %   ROI:    Cropped objects in the original volume according the the
 %           structure defined by "labels".
