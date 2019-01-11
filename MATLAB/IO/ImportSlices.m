@@ -1,5 +1,11 @@
 function [ image_stack ] = ImportSlices(input_path, current_voxel_size, target_voxel_size)
-% ImageLocation is a character containing the path for the images e.g., %'C:\Users\user1\Projects\project1\images\set1'
+% IMPORTSLICES imports stacks the images located in the folder "input_path".
+% input_path:           a character containing the path for the images 
+%                       e.g., %'C:\Users\user1\Projects\project1\images\set1'
+% current_voxel_size:   a 1X3 vector describing the original voxel size of 
+%                       the images in the input path in dims 1, 2 and 3.
+% target_voxel_size:    a 1X3 vector describing the desired voxel size of 
+%                       in dims 1, 2 and 3.
 
 
 % Add images to image datastore

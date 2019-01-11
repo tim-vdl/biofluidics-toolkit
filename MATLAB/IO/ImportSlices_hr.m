@@ -1,4 +1,8 @@
 function [ scan ] = ImportSlices_hr(imageLocation,scale,SelectEveryNthImage)
+
+%% NOT RECOMMENDED, USE ImportSlices INSTEAD
+
+
 %% ImageLocation is a character containing the path for the images e.g., %'C:\Users\user1\Projects\project1\images\set1'
 % n: select slices per n-images: possibility to reduce number of slices to
 % be selected. If all slices must be used, do not specify "n", or set it to
