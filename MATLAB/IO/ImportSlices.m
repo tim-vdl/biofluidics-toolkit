@@ -27,12 +27,17 @@ if ~p.Results.DICOM
         image_stack = cat(3, image_stack, slice);
     end
 else
+   % Get all file names
    file_extension = p.Results.FileExtension; 
    files = dir(fullfile(input_path, file_extension));
    file_names = {files(:).name};
-   n_files = numel(file_names);
+   
+   % Get number of images, image width, image height and preallocate 
    info = dicominfo(fullfile(input_path, file_names{1}));
+   n_files = numel(file_names);
    image_stack = uint16(zeros(info.Height, info.Width, n_files));
+   
+   % Add all slices to the image stack
    for f = 1:n_files
       file_path = fullfile(input_path, file_names{f});
       slice = dicomread(file_path);
@@ -44,10 +49,7 @@ end
 if ~isempty(p.Results.CurrentVoxelSize)
     current_voxel_size  = p.Results.CurrentVoxelSize;
     target_voxel_size   = p.Results.TargetVoxelSize;
-	current_size = size(image_stack);
-	true_size = current_size .* current_voxel_size;
-	target_size = true_size ./ target_voxel_size;
-	image_stack = imresize3(image_stack, target_size);
+	image_stack = change_voxel_size(image_stack, current_voxel_size, target_voxel_size);
 end
 
 end
