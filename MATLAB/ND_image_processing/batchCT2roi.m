@@ -36,6 +36,7 @@ function [ROI, bounding_boxes, centroids, BW, BW_filled, FV] = batchCT2roi(volum
 %                            See "help reducepatch" for more information
 %       MeshDimensionScales: Scale the mesh coordinates by multiplying with
 %                            each coordinate variable.
+%       SmoothMesh:          Smooth meshes or not (default = 1)
 %       SavePath:   Specifies where to save the outputs. By default, the
 %                   outputs are not saved. For every output type
 %                   {'ROI', 'BW', 'BW_filled', 'FV'} a seperate folder will 
@@ -79,6 +80,7 @@ checkMeshSaveFormat = @(x) ischar(x) & any(strcmp({'mat','stl','both'},x));
 addParameter(p,'MinimalObjectVolume',5000,@isnumeric);
 addParameter(p,'MeshReductionFactor',0.05,is_one_number);
 addParameter(p,'MeshDimensionScales',[1, 1, 1], @isnumeric);
+addParameter(p,'SmoothMesh', true, @islogical);
 addParameter(p,'SavePath',[],@ischar);
 addParameter(p,'OutputToSave',{'ROI'},@iscellstr);
 addParameter(p,'MeshSaveFormat','stl',checkMeshSaveFormat);
@@ -87,15 +89,16 @@ addParameter(p,'StrelSize',5,is_one_number);
 addParameter(p,'BinarizeThreshold', multithresh(volume,1), is_one_number);
 parse(p,varargin{:});
 
-output2save = p.Results.OutputToSave;
-min_object_vol = p.Results.MinimalObjectVolume;
-save_path = p.Results.SavePath;
-mesh_save_format = p.Results.MeshSaveFormat;
-mesh_reduction_factor = p.Results.MeshReductionFactor;
-mesh_dim_scales = p.Results.MeshDimensionScales;
-pad_size = p.Results.CTvolPadSize;
-strel_size = p.Results.StrelSize;
-binarize_threshold = p.Results.BinarizeThreshold;
+output2save             = p.Results.OutputToSave;
+min_object_vol          = p.Results.MinimalObjectVolume;
+save_path               = p.Results.SavePath;
+mesh_save_format        = p.Results.MeshSaveFormat;
+mesh_reduction_factor   = p.Results.MeshReductionFactor;
+mesh_dim_scales         = p.Results.MeshDimensionScales;
+smooth_mesh             = p.Results.SmoothMesh;
+pad_size                = p.Results.CTvolPadSize;
+strel_size              = p.Results.StrelSize;
+binarize_threshold      = p.Results.BinarizeThreshold;
 
 %% Infere info
 [n_row, n_col, n_layers] = size(labels);
@@ -214,6 +217,9 @@ for i = 1:numel(labels)
                     fv = isosurface(bw_roi_filled, 0.5);
                     fv = reducepatch(fv, mesh_reduction_factor);
                     fv.vertices = (fv.vertices - nanmean(fv.vertices,1)) .* mesh_dim_scales;
+                    if smooth_mesh
+                        fv = smooth_this_mesh(fv, 1);
+                    end
                     FV{i} = fv;
                 end
             end
@@ -235,9 +241,9 @@ if ~isempty(save_path)
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
                         fullfile(save_path,...
-                        output_type,...
-                        folder,...
-                        sprintf('slice_%0.4d.tif',j)));
+                                 output_type,...
+                                 folder,...
+                                 sprintf('slice_%0.4d.png',j)));
                 end
             end
             if any(strcmp(output2save,'BW'))
@@ -248,10 +254,10 @@ if ~isempty(save_path)
                 this_roi = BW{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
-                        fullfile(save_path,...
-                        output_type,...
-                        folder,...
-                        sprintf('slice_%0.4d.tif',j)));
+                            fullfile(save_path,...
+                            output_type,...
+                            folder,...
+                            sprintf('slice_%0.4d.png',j)));
                 end
             end
             if any(strcmp(output2save,'BW_filled'))
@@ -262,10 +268,10 @@ if ~isempty(save_path)
                 this_roi = BW_filled{i};
                 for j = 1:size(this_roi,3)
                     imwrite(this_roi(:,:,j),...
-                        fullfile(save_path,...
-                        output_type,...
-                        folder,...
-                        sprintf('slice_%0.4d.tif',j)));
+                            fullfile(save_path,...
+                            output_type,...
+                            folder,...
+                            sprintf('slice_%0.4d.png',j)));
                 end
             end
             if any(strcmp(output2save,'FV'))
