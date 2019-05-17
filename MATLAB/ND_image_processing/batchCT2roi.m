@@ -76,7 +76,7 @@ p = inputParser;
 % checkIntiger = @(x) rem(x,1)==0;
 is_one_number = @(x) numel(x)==1 & isnumeric(x);
 checkMeshSaveFormat = @(x) ischar(x) & any(strcmp({'mat','stl','both'},x));
-addParameter(p,'MinimalObjectVolume',5000,@ischar);
+addParameter(p,'MinimalObjectVolume',5000,@isnumeric);
 addParameter(p,'MeshReductionFactor',0.05,is_one_number);
 addParameter(p,'MeshDimensionScales',[1, 1, 1], @isnumeric);
 addParameter(p,'SavePath',[],@ischar);
@@ -111,6 +111,7 @@ volume   = padarray(volume,[pad_size pad_size pad_size]);
 fprintf('Binarizing the volume... \n');
 bw_volume = volume > binarize_threshold;
 bw_volume = imclose(bw_volume,ones(strel_size,strel_size,strel_size));
+bw_volume = imopen(bw_volume,ones(strel_size,strel_size,strel_size));
 
 fprintf('Filling binary objects... \n');
 bw_volume_filled = imfill(bw_volume,'holes');
@@ -124,9 +125,13 @@ bw_volume_filled = bwareaopen(bw_volume_filled, min_object_vol);
 bw_volume = bwareaopen(bw_volume, min_object_vol);
 
 %% Get the bounding box around each object
-fprintf('Sorting objects according to numbering... \n');
 % Calculate region properties
 stats = regionprops3(bw_volume_filled, 'BoundingBox','Centroid');
+
+n_objects_found = size(stats,1);
+fprintf('Found %i objects \n', n_objects_found)
+fprintf('Sorting objects according to numbering... \n');
+
 x = stats.Centroid(:,2);
 y = stats.Centroid(:,1);
 z = stats.Centroid(:,3);
@@ -143,7 +148,7 @@ for i = 1:n_layers
     if i == 1
         this_layer = T(1:n_in_layer(i),:);
     else
-        this_layer = T(n_in_layer(i-1)+1:sum(n_in_layer(1:i-1))+n_in_layer(i),:);
+        this_layer = T(sum(n_in_layer(1:i-1))+1:sum(n_in_layer(1:i-1))+n_in_layer(i),:);
     end
     % Sort according to Y to seperate columns
     this_layer = sortrows(this_layer,'Y','ascend'); 
