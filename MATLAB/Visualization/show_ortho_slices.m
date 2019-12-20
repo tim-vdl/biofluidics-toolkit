@@ -1,4 +1,4 @@
-function show_ortho_slices(sample, varargin)
+function [slice_xy, slice_xz, slice_yz, locations] = show_ortho_slices(sample, varargin)
 
 valid_orientations = {'vertical', 'horizontal'};
 p = inputParser;
@@ -8,7 +8,7 @@ addParameter(p, 'FontSize', 20, @isnumeric);
 parse(p, varargin{:});
 
 volume_size = size(sample);
-locations = round(volume_size .* p.Results.Location);
+locations = round(volume_size(1:3) .* p.Results.Location);
 
 slice_xy = squeeze(sample(:,:,locations(3),:));
 slice_xz = squeeze(sample(:,locations(2),:,:));
