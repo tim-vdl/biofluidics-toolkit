@@ -2,9 +2,11 @@ function [rotated_volume, angle, rotation_axis] = align_vol_axis(binary_volume, 
 %ALIGN_VOL_AXIS Align principal axis of a binary volume with a target axis.
 % target axis: 3x1 vector
 assert(isequal(size(target_axis),[3,1]), 'Target axis should have size [3, 1]')
-stats = regionprops3(binary_volume, 'Centroid', 'EigenVectors');
+stats = regionprops3(binary_volume, 'Centroid', 'EigenValues', 'EigenVectors');
+eigenvals  =  stats.EigenValues{:};
 eigenvects = stats.EigenVectors{:};
-principal_axis = [eigenvects(2,1); eigenvects(1,1); eigenvects(3,1)]; % image space to XYZ
+[~, id] = max(eigenvals);
+principal_axis = [eigenvects(2,id); eigenvects(1,id); eigenvects(3,id)]; % image space to XYZ
 
 rotation_axis = cross(principal_axis,target_axis);
 angle = -atand(norm(cross(principal_axis,target_axis),...
