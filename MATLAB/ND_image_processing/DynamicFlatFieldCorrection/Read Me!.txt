@@ -1,0 +1,13 @@
+Dynamic flat field correction
+------------------------------
+
+Dynamic flat field correction was developed to deal with dynamic intensity changes 
+of flat fields in x-ray imaging. More information about the algorithm can be found in the following publication:
+V.Van Nieuwenhove, J. De Beenhouwer, F. De Carlo, L. Mancini, F. Marone, and J. Sijbers, 
+"Dynamic intensity normalization using eigen flat fields in X-ray imaging", Optics Express, 2015
+
+To use this Matlab implementation of the algorithm adapt the parameter section of the file 'DynamicFlatFieldCorrection.m'
+to your needs and run it in Matlab.   
+
+Requirements: 	BM3D filter (included), matlab(tested on matlab R2014b), 
+				matlab Optimization Toolbox, matlab Image Processing Toolbox.
