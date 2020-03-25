@@ -1,4 +1,7 @@
 function [file_names_with_extension, file_names, file_paths, number_of_files] = get_folder_file_names(input_path, file_extension)
+if ~contains(file_extension, '*')
+    file_extension = strcat('*', file_extension);
+end
 files = dir(fullfile(input_path, file_extension));
 file_names_with_extension = {files.name};
 extenstion = file_extension(2:end);
