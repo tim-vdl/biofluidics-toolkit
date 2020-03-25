@@ -14,12 +14,17 @@ addRequired(p, 'InputPath')
 addParameter(p, 'CurrentVoxelSize', [])
 addParameter(p, 'TargetVoxelSize', [])
 addParameter(p, 'DICOM', false)
-addParameter(p, 'FileExtension', '*.IMA')
+addParameter(p, 'FileExtension', [])
 parse(p, input_path, varargin{:})
 
+file_extension = p.Results.FileExtension; 
 if ~p.Results.DICOM
     % Add images to image datastore
-    image_data_store = imageDatastore(input_path);
+    if ~isempty(file_extension)
+        image_data_store = imageDatastore(input_path, 'FileExtension', file_extension);
+    else
+        image_data_store = imageDatastore(input_path);
+    end
     % Loop over images and add them to the stack of slices
     image_stack = [];
     for i = 1:numel(image_data_store.Files)
@@ -28,7 +33,6 @@ if ~p.Results.DICOM
     end
 else
    % Get all file names
-   file_extension = p.Results.FileExtension; 
    [~, file_paths, number_of_files] = get_folder_file_names(input_path,...
                                                    file_extension);
    % Get number of images, image width, image height and preallocate 
