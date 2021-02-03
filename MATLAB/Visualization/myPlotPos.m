@@ -10,13 +10,13 @@ function AxisPos = myPlotPos(nCol, nRow, defPos)
 if nRow < 3
    BplusT = 0.18;
 else
-   BplusT = 0.09 + 0.045 * nRow;
+   BplusT = 0.09 + 0.01 * nRow;
 end
 
 if nCol < 3
    LplusR = 0.18;
 else
-   LplusR = 0.09 + 0.05 * nCol;
+   LplusR = 0.09 + 0.01 * nCol;
 end
 
 nPlot = nRow * nCol;
